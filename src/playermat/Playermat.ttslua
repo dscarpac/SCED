@@ -284,11 +284,25 @@ end
 ---@param objList table List of objects to discard
 function discardListOfObjects(objList)
   for _, obj in ipairs(objList) do
-    if obj.type == "Card" or obj.type == "Deck" then
+    if obj.type == "Card" then
       if obj.hasTag("PlayerCard") then
         deckLib.placeOrMergeIntoDeck(obj, returnGlobalDiscardPosition(), self.getRotation())
       else
         deckLib.placeOrMergeIntoDeck(obj, ENCOUNTER_DISCARD_POSITION, { x = 0, y = -90, z = 0 })
+      end
+    elseif obj.type == "Deck" then
+      local data = obj.getData()
+      for _, card in ipairs(data["ContainedObjects"]) do
+        local tags = {}
+        for _, tag in ipairs(card["Tags"] or {}) do
+          tags[tag] = true
+        end
+        log(tags)
+        if tags.PlayerCard then
+          deckLib.placeOrMergeIntoDeck(card, returnGlobalDiscardPosition(), self.getRotation())
+        else
+          deckLib.placeOrMergeIntoDeck(card, ENCOUNTER_DISCARD_POSITION, { x = 0, y = -90, z = 0 })
+        end
       end
     elseif tokenChecker.isChaosToken(obj) then
       -- put chaos tokens back into bag (e.g. Unrelenting)
