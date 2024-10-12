@@ -10,6 +10,10 @@ local tokenManagerApi             = require("core/token/TokenManagerApi")
 local tokenSpawnTrackerApi        = require("core/token/TokenSpawnTrackerApi")
 local zones                       = require("playermat/Zones")
 
+-- clickable health / sanity settings
+MIN_VALUE, MAX_VALUE = 0, 99
+val = 0
+
 -- option panel data
 local availableOptions            = {
   ["PERSONAL SETTINGS"] = {
@@ -1288,6 +1292,7 @@ function maybeUpdateActiveInvestigator(card)
   if notes.id == activeInvestigatorData.id then return end
 
   -- extract relevant data from the metadata
+  activeInvestigatorData.guid = card.getGUID()
   activeInvestigatorData.class = notes.class
   activeInvestigatorData.id = notes.id
   activeInvestigatorData.miniId = getMiniId(notes.id)
@@ -1310,6 +1315,68 @@ function maybeUpdateActiveInvestigator(card)
     -- Zoop-exported investigators are horizontal cards and TTS scales them differently
     card.setScale({ 0.8214, 1, 0.8214 })
   end
+  local playermatGuid = self.getGUID()
+  InvestigatorCard = card
+  -- add XML for health/sanity tracker
+  --local currentXML = card.UI.getXmlTable()
+  local uiVal = 1
+  local xml = {
+    {
+      tag = "Button",
+      attributes = {
+        id = "xmlBtnD",
+        scale = "0.1 0.1 1",
+        image = "token-damage",
+        onClick = playermatGuid .. "/addOrSubtract",
+        position = "77 67 -22",
+        rotation = "0 0 90",
+        height = "320",
+        width = "250"
+      },
+      children =  {
+        {
+          tag = "Text",
+          attributes = {
+            id = "xmlDamage",
+            fontSize ="220",
+            font = "font_arkham-numbers",
+            text = uiVal,
+            color = "#FFFFFF",
+            outline = "#FA2A19",
+            outlineSize = "10 -10"
+          }
+        }
+      }
+    },
+    {
+      tag = "Button",
+      attributes = {
+        id = "xmlBtnH",
+        scale = "0.1 0.1 1",
+        image = "token-horror",
+        onClick = playermatGuid .. "/addOrSubtract(id)",
+        position = "77 105 -22",
+        rotation = "0 0 90",
+        height = "265",
+        width = "332"
+      },
+      children =  {
+        {
+          tag = "Text",
+          attributes = {
+            id = "xmlHorror",
+            fontSize ="220",
+            font = "font_arkham-numbers",
+            text = uiVal,
+            color = "#FFFFFF",
+            outline = "#302F6D",
+            outlineSize = "10 -10"
+          }
+        }
+      }
+    }
+  }
+  InvestigatorCard.UI.setXmlTable(xml) 
 
   -- remove old action tokens
   for _, obj in ipairs(searchAroundSelf("isUniversalToken")) do
@@ -1673,3 +1740,45 @@ end
 function getActiveInvestigatorData() return activeInvestigatorData end
 
 function setActiveInvestigatorData(newData) activeInvestigatorData = newData end
+
+----
+-- functions dealing with the xml damage/horror counters
+----
+
+function updateLabel(uiVal, id)
+  local data = getActiveInvestigatorData()
+  local card = getObjectFromGUID(data.guid)
+  if id == "xmlBtnD" then
+    card.UI.setAttribute("xmlDamage", "text", uiVal)
+  else
+    card.UI.setAttribute("xmlHorror", "text", uiVal)
+  end
+  
+end
+
+-- sets the value to 'newVal'
+function updateVal(newVal, id)
+  log(newVal)
+  if tonumber(newVal) then
+    val = math.min(math.max(newVal, MIN_VALUE), MAX_VALUE)
+    updateLabel(val, id)
+  end
+end
+
+-- modifies the value by 'mod'
+function modifyValue(mod, id)
+  local newVal = math.min(math.max(val + tonumber(mod), MIN_VALUE), MAX_VALUE)
+  updateVal(newVal, id)
+end
+
+-- left-click: increase / right-click: decrease / middle-click: reset
+function addOrSubtract(_, clickType, id)
+  local mod = 1
+  if clickType == "-2" then
+    mod = -1
+  elseif clickType == "-3" then
+    updateVal(1)
+    return
+  end
+  modifyValue(mod, id)
+end

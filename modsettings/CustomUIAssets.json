@@ -273,5 +273,15 @@
     "Name": "token-custom-token",
     "Type": 0,
     "URL": "https://steamusercontent-a.akamaihd.net/ugc/2380784374792650571/E4C2B2B69282A4EE15FE290FF6B08BEFC8FCA65C/"
+  },
+  {
+    "Name": "token-damage",
+    "Type": 0,
+    "URL": "https://steamusercontent-a.akamaihd.net/ugc/2425839392396475030/7FD93EB342AD41F973BE31894B1CE8418C6D99A3/"
+  },
+  {
+    "Name": "token-horror",
+    "Type": 0,
+    "URL": "https://steamusercontent-a.akamaihd.net/ugc/2425839392396423416/9CC783AD03275AAB3443A1DACA7A58A892AAB632/"
   }
 ]
